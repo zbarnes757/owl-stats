@@ -25,16 +25,12 @@ func GetMatchData() (Match, error) {
 
 // PrintMatchData to print all the data
 func PrintMatchData(m Match) {
-	// playerData := make(map[int]StatPlayer)
-
-	// for _, player := range players {
-	// 	playerData[player.PlayerID] = player
-	// }
-
 	for _, team := range m.Teams {
 		for _, player := range team.Players {
 			p, err := fetchPlayer(player.ESportsPlayerID)
-			if err == nil {
+			if err != nil {
+				fmt.Println(err)
+			} else {
 				printPlayerData(p, player)
 			}
 		}
@@ -47,6 +43,13 @@ func printPlayerData(player Player, mP MatchPlayer) {
 
 	for _, stat := range mP.Stats {
 		fmt.Printf("%s: %d\n", stat.Name, stat.Value)
+	}
+
+	for _, hero := range mP.Heroes {
+		fmt.Printf("While playing %s:\n", hero.Name)
+		for _, stat := range hero.Stats {
+			fmt.Printf("%s: %d\n", stat.Name, stat.Value)
+		}
 	}
 
 	fmt.Println()
