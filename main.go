@@ -19,5 +19,7 @@ func main() {
 	n.Use(negroni.NewLogger())
 	n.UseHandler(router)
 
+	app.StartScheduledProcesses()
+
 	n.Run()
 }
