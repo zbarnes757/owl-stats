@@ -5,8 +5,8 @@ import "time"
 // Polling is used to keep track of polling tasks that need to be done
 type Polling struct {
 	Base
-	LastRan *time.Time
-	NextRun *time.Time
+	LastRan time.Time
+	NextRun time.Time
 	Title   string `gorm:"unique;not null"`
 }
 

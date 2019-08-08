@@ -19,9 +19,8 @@ func schedulePlayerData() {
 		if polling == nil {
 			polling = models.GetPolling("player_fetch")
 
-			if polling.NextRun == nil {
-				t := time.Now().Add(time.Second * 10)
-				polling.NextRun = &t
+			if polling.NextRun == (time.Time{}) {
+				polling.NextRun = time.Now().Add(time.Second * 10)
 			}
 		}
 
@@ -29,9 +28,8 @@ func schedulePlayerData() {
 		time.Sleep(polling.NextRun.Sub(time.Now()))
 		log.Println("Fetching player data...")
 
-		lastRan := time.Now()
 		next := time.Now().Add(time.Hour * 24 * 7)
+		models.GetDB().Model(polling).Updates(models.Polling{LastRan: time.Now(), NextRun: next})
 		log.Println("Updating player_fetch polling to run again at: " + polling.NextRun.String())
-		models.GetDB().Model(polling).Updates(models.Polling{LastRan: &lastRan, NextRun: &next})
 	}
 }
