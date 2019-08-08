@@ -14,30 +14,24 @@ func StartScheduledProcesses() {
 
 func schedulePlayerData() {
 	log.Println("Player Data fetch process started...")
-	var nextRun *time.Time
 	var polling *models.Polling
 	for {
-		if nextRun == nil {
+		if polling == nil {
 			polling = models.GetPolling("player_fetch")
 
-			if polling == nil || polling.NextRun == nil {
+			if polling.NextRun == nil {
 				t := time.Now().Add(time.Second * 10)
-				nextRun = &t
-			} else {
-				nextRun = polling.NextRun
+				polling.NextRun = &t
 			}
 		}
 
 		// sleep until it's the next time
-		time.Sleep(nextRun.Sub(time.Now()))
+		time.Sleep(polling.NextRun.Sub(time.Now()))
 		log.Println("Fetching player data...")
 
 		lastRan := time.Now()
-		t := time.Now().Add(time.Hour * 24 * 7)
-		nextRun = &t
-		if polling != nil {
-			log.Println("Updating player_fetch polling to run again at: " + nextRun.String())
-			models.GetDB().Model(polling).Updates(models.Polling{LastRan: &lastRan, NextRun: nextRun})
-		}
+		next := time.Now().Add(time.Hour * 24 * 7)
+		log.Println("Updating player_fetch polling to run again at: " + polling.NextRun.String())
+		models.GetDB().Model(polling).Updates(models.Polling{LastRan: &lastRan, NextRun: &next})
 	}
 }
