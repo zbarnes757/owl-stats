@@ -1,11 +1,23 @@
 package main
 
 import (
-	leagueapi "owl-stats/league-api"
+	"owl-stats/app"
+
+	"github.com/gorilla/mux"
+	"github.com/urfave/negroni"
 )
 
 func main() {
-	// players, _ := leagueapi.GetAllPlayerData()
-	match, _ := leagueapi.GetMatchData()
-	leagueapi.PrintMatchData(match)
+	router := mux.NewRouter()
+	router.Use(app.JwtAuthentication)
+
+	// add routes
+	// TODO: think of routes to add
+
+	n := negroni.New()
+	n.Use(negroni.NewRecovery())
+	n.Use(negroni.NewLogger())
+	n.UseHandler(router)
+
+	n.Run()
 }
