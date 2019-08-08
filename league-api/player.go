@@ -3,7 +3,9 @@ package leagueapi
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"owl-stats/models"
 	"time"
 )
 
@@ -27,6 +29,25 @@ type playerResponse struct {
 
 type playerData struct {
 	Player Player `json:"player"`
+}
+
+type playersResp struct {
+	Content []models.OWLPlayer `json:"content"`
+}
+
+// FetchAllPlayers will return a full list of all players in the OW League
+func FetchAllPlayers() []models.OWLPlayer {
+	log.Println("Sending request for all player data to " + playerURI)
+
+	resp, err := playerClient.Get(playerURI)
+	if err != nil {
+		return []models.OWLPlayer{}
+	}
+	defer resp.Body.Close()
+
+	var res playersResp
+	json.NewDecoder(resp.Body).Decode(&res)
+	return res.Content
 }
 
 func fetchPlayer(id int) (Player, error) {

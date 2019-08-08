@@ -2,6 +2,7 @@ package app
 
 import (
 	"log"
+	leagueapi "owl-stats/league-api"
 	"owl-stats/models"
 	"time"
 )
@@ -26,7 +27,9 @@ func schedulePlayerData() {
 
 		// sleep until it's the next time
 		time.Sleep(polling.NextRun.Sub(time.Now()))
-		log.Println("Fetching player data...")
+		players := leagueapi.FetchAllPlayers()
+
+		models.BulkCreateOWLPlayers(players)
 
 		next := time.Now().Add(time.Hour * 24 * 7)
 		models.GetDB().Model(polling).Updates(models.Polling{LastRan: time.Now(), NextRun: next})

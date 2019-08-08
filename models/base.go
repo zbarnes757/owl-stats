@@ -28,7 +28,7 @@ func init() {
 
 	db = conn
 	// Database migration
-	db.AutoMigrate(&Account{}, &Polling{})
+	db.AutoMigrate(&Account{}, &Polling{}, &OWLPlayer{})
 
 	if GetPolling("player_fetch") == nil {
 		playerFetch := Polling{Title: "player_fetch"}
