@@ -10,6 +10,11 @@ type Polling struct {
 	Title   string `gorm:"unique;not null"`
 }
 
+// Update a polling with the given data
+func (p *Polling) Update(data Polling) {
+	db.Model(p).Updates(data)
+}
+
 // GetPolling finds a polling by title
 func GetPolling(title string) *Polling {
 	polling := &Polling{}

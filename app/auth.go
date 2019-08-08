@@ -18,7 +18,7 @@ var contextKeyUserID = contextKey("user")
 // JwtAuthentication is a middleware for validating JWTs
 func JwtAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		notAuth := []string{"/api/user/new", "/api/user/login"}
+		notAuth := []string{"/api/v1/user/new", "/api/v1/user/login"}
 		requestPath := r.URL.Path
 
 		// Check if request does not need authentication,

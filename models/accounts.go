@@ -10,17 +10,18 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
+	uuid "github.com/satori/go.uuid"
 )
 
 // Token is a JWT claims struct
 type Token struct {
-	UserID uint
+	UserID uuid.UUID
 	jwt.StandardClaims
 }
 
 // Account represents the user account
 type Account struct {
-	gorm.Model
+	Base
 	Email    string `json:"email"`
 	Password string `json:"password,omitempty"`
 	Token    string `json:"token" sql:"-"`
@@ -40,7 +41,7 @@ func (account *Account) Validate() (map[string]interface{}, bool) {
 	temp := &Account{}
 
 	// check for errors and duplicate emails
-	err := GetDB().Table("accounts").Where("email = ?", account.Email).First(temp).Error
+	err := db.Table("accounts").Where("email = ?", account.Email).First(temp).Error
 	fmt.Println(err)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return u.Message(false, "Connection error. Please retry"), false
@@ -61,11 +62,7 @@ func (account *Account) Create() map[string]interface{} {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(account.Password), bcrypt.DefaultCost)
 	account.Password = string(hashedPassword)
 
-	GetDB().Create(account)
-
-	if account.ID <= 0 {
-		return u.Message(false, "Failed to create account, connection error.")
-	}
+	db.Create(account)
 
 	// Create new JWT token for the newly registered account
 	tk := &Token{UserID: account.ID}
@@ -84,7 +81,7 @@ func (account *Account) Create() map[string]interface{} {
 // Login the user
 func Login(email, password string) map[string]interface{} {
 	account := &Account{}
-	err := GetDB().Table("accounts").Where("email = ?", email).First(account).Error
+	err := db.Table("accounts").Where("email = ?", email).First(account).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return u.Message(false, "Email address not found")
@@ -119,7 +116,7 @@ func Login(email, password string) map[string]interface{} {
 func GetUser(u uint) *Account {
 
 	acc := &Account{}
-	GetDB().Table("accounts").Where("id = ?", u).First(acc)
+	db.Table("accounts").Where("id = ?", u).First(acc)
 
 	// User not found!
 	if acc.Email == "" {

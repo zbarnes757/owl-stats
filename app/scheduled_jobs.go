@@ -26,13 +26,14 @@ func schedulePlayerData() {
 		}
 
 		// sleep until it's the next time
+		log.Println("Scheduling player_fetch polling to run at: " + polling.NextRun.UTC().Format("2006-01-02T15:04:05"))
 		time.Sleep(polling.NextRun.Sub(time.Now()))
 		players := leagueapi.FetchAllPlayers()
 
 		models.BulkCreateOWLPlayers(players)
 
 		next := time.Now().Add(time.Hour * 24 * 7)
-		models.GetDB().Model(polling).Updates(models.Polling{LastRan: time.Now(), NextRun: next})
-		log.Println("Updating player_fetch polling to run again at: " + polling.NextRun.String())
+		log.Println("Updating player_fetch polling to run again at: " + next.UTC().Format("2006-01-02T15:04:05"))
+		polling.Update(models.Polling{LastRan: time.Now(), NextRun: next})
 	}
 }
