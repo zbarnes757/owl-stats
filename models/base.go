@@ -43,10 +43,10 @@ func GetDB() *gorm.DB {
 
 // Base contains common columns for all tables.
 type Base struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
+	ID        uuid.UUID  `gorm:"type:uuid;primary_key;" jsonapi:"primary"`
+	CreatedAt time.Time  `jsonapi:"attr,createdAt"`
+	UpdatedAt time.Time  `jsonapi:"attr,updatedAt"`
+	DeletedAt *time.Time `sql:"index" jsonapi:"attr,deletedAt"`
 }
 
 // BeforeCreate will set a UUID rather than numeric ID.

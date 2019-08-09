@@ -2,6 +2,7 @@ package main
 
 import (
 	"owl-stats/app"
+	"owl-stats/controllers"
 
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
@@ -12,7 +13,7 @@ func main() {
 	router.Use(app.JwtAuthentication)
 
 	// add routes
-	// TODO: think of routes to add
+	router.HandleFunc("/api/v1/user/new", controllers.CreateAccount).Methods("POST")
 
 	n := negroni.New()
 	n.Use(negroni.NewRecovery())

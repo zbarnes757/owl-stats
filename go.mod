@@ -7,6 +7,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.0.0-20190806190131-db2462fef53b // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/go-cmp v0.3.1 // indirect
+	github.com/google/jsonapi v0.0.0-20181016150055-d0428f63eb51
 	github.com/gorilla/mux v1.7.3
 	github.com/jinzhu/gorm v1.9.10
 	github.com/joho/godotenv v1.3.0

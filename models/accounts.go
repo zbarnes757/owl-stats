@@ -5,6 +5,7 @@ import (
 	"os"
 	u "owl-stats/utils"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -22,9 +23,10 @@ type Token struct {
 // Account represents the user account
 type Account struct {
 	Base
-	Email    string `json:"email"`
-	Password string `json:"password,omitempty"`
-	Token    string `json:"token" sql:"-"`
+	ID       uuid.UUID `gorm:"type:uuid;primary_key;" jsonapi:"primary,accounts"`
+	Email    string    `jsonapi:"attr,email"`
+	Password string    `jsonapi:"attr,password,omitempty"`
+	Token    string    `jsonapi:"attr,token,omitempty" sql:"-"`
 }
 
 // Validate the provided user information
@@ -54,13 +56,18 @@ func (account *Account) Validate() (map[string]interface{}, bool) {
 }
 
 // Create a new user
-func (account *Account) Create() map[string]interface{} {
-	if resp, ok := account.Validate(); !ok {
-		return resp
+func (account *Account) Create() {
+	if _, ok := account.Validate(); !ok {
+		return
 	}
+
+	now := time.Now()
 
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(account.Password), bcrypt.DefaultCost)
 	account.Password = string(hashedPassword)
+	account.ID = uuid.NewV4()
+	account.CreatedAt = now
+	account.UpdatedAt = now
 
 	db.Create(account)
 
@@ -72,10 +79,6 @@ func (account *Account) Create() map[string]interface{} {
 
 	// delete password
 	account.Password = ""
-
-	response := u.Message(true, "Account has been created")
-	response["account"] = account
-	return response
 }
 
 // Login the user
