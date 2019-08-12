@@ -15,10 +15,19 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	account.Create()
 
 	w.Header().Set("Content-Type", jsonapi.MediaType)
-	// w.WriteHeader(http.StatusCreated)
+	if err := account.Create(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+
+		jsonapi.MarshalErrors(w, []*jsonapi.ErrorObject{{
+			Title:  "Validation Error",
+			Detail: err.Error(),
+			Status: "400",
+		}})
+		return
+	}
+
 	if err := jsonapi.MarshalPayload(w, account); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

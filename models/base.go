@@ -8,7 +8,6 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" // instantiates the postgres dialect
 	"github.com/joho/godotenv"
-	uuid "github.com/satori/go.uuid"
 )
 
 var db *gorm.DB
@@ -43,14 +42,7 @@ func GetDB() *gorm.DB {
 
 // Base contains common columns for all tables.
 type Base struct {
-	ID        uuid.UUID  `gorm:"type:uuid;primary_key;" jsonapi:"primary"`
 	CreatedAt time.Time  `jsonapi:"attr,createdAt"`
-	UpdatedAt time.Time  `jsonapi:"attr,updatedAt"`
-	DeletedAt *time.Time `sql:"index" jsonapi:"attr,deletedAt"`
-}
-
-// BeforeCreate will set a UUID rather than numeric ID.
-func (base *Base) BeforeCreate(scope *gorm.Scope) error {
-	uuid := uuid.NewV4()
-	return scope.SetColumn("ID", uuid)
+	UpdatedAt time.Time  `jsonapi:"attr,createdAt"`
+	DeletedAt *time.Time `sql:"index" jsonapi:"attr,createdAt"`
 }

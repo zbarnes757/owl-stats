@@ -1,9 +1,9 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	u "owl-stats/utils"
 	"strings"
 	"time"
 
@@ -11,32 +11,31 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
-	uuid "github.com/satori/go.uuid"
 )
 
 // Token is a JWT claims struct
 type Token struct {
-	UserID uuid.UUID
+	UserID uint
 	jwt.StandardClaims
 }
 
 // Account represents the user account
 type Account struct {
 	Base
-	ID       uuid.UUID `gorm:"type:uuid;primary_key;" jsonapi:"primary,accounts"`
-	Email    string    `jsonapi:"attr,email"`
-	Password string    `jsonapi:"attr,password,omitempty"`
-	Token    string    `jsonapi:"attr,token,omitempty" sql:"-"`
+	ID       uint   `gorm:"primary_key,AUTO_INCREMENT" jsonapi:"primary,accounts"`
+	Email    string `gorm:"UNIQUE_INDEX;not null" jsonapi:"attr,email"`
+	Password string `jsonapi:"attr,password,omitempty"`
+	Token    string `jsonapi:"attr,token,omitempty" sql:"-"`
 }
 
 // Validate the provided user information
-func (account *Account) Validate() (map[string]interface{}, bool) {
+func (account *Account) Validate() (string, bool) {
 	if !strings.Contains(account.Email, "@") {
-		return u.Message(false, "Email address is required"), false
+		return "Email address is required", false
 	}
 
 	if len(account.Password) < 6 {
-		return u.Message(false, "Password is required"), false
+		return "Password is required", false
 	}
 
 	// Email must be unique
@@ -46,26 +45,25 @@ func (account *Account) Validate() (map[string]interface{}, bool) {
 	err := db.Table("accounts").Where("email = ?", account.Email).First(temp).Error
 	fmt.Println(err)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return u.Message(false, "Connection error. Please retry"), false
+		return "Connection error. Please retry", false
 	}
 	if temp.Email != "" {
-		return u.Message(false, "Email address already in use by another user."), false
+		return "Email address already in use by another user.", false
 	}
 
-	return u.Message(false, "Requirement passed"), true
+	return "Requirement passed", true
 }
 
 // Create a new user
-func (account *Account) Create() {
-	if _, ok := account.Validate(); !ok {
-		return
+func (account *Account) Create() error {
+	if reason, ok := account.Validate(); !ok {
+		return errors.New(reason)
 	}
 
 	now := time.Now()
 
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(account.Password), bcrypt.DefaultCost)
 	account.Password = string(hashedPassword)
-	account.ID = uuid.NewV4()
 	account.CreatedAt = now
 	account.UpdatedAt = now
 
@@ -79,24 +77,25 @@ func (account *Account) Create() {
 
 	// delete password
 	account.Password = ""
+	return nil
 }
 
 // Login the user
-func Login(email, password string) map[string]interface{} {
-	account := &Account{}
-	err := db.Table("accounts").Where("email = ?", email).First(account).Error
+func (account *Account) Login() error {
+	tempPass := account.Password
+	err := db.Table("accounts").Where("email = ?", account.Email).First(account).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return u.Message(false, "Email address not found")
+			return errors.New("Email address not found")
 		}
-		return u.Message(false, "Connection error. Please retry")
+		return errors.New("Connection error. Please retry")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(tempPass))
 
 	// Password does not match!
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		return u.Message(false, "Invalid login credentials. Please try again")
+		return errors.New("Invalid login credentials. Please try again")
 	}
 
 	// Worked! Logged In
@@ -110,9 +109,7 @@ func Login(email, password string) map[string]interface{} {
 	// Store the token in the response
 	account.Token = tokenString
 
-	resp := u.Message(true, "Logged In")
-	resp["account"] = account
-	return resp
+	return nil
 }
 
 // GetUser returns a user
